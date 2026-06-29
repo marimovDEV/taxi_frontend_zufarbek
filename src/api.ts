@@ -4,12 +4,14 @@
  */
 
 // Django REST backend bilan ishlash uchun yengil fetch wrapper.
-// Sessiya (cookie) asosida ishlaydi: login qilingandan keyin browser
-// avtomatik csrftoken/sessionid cookie'larini saqlaydi, biz ularni
-// har bir so'rovda credentials:'include' orqali yuboramiz.
+// Token-based autentifikatsiya: login qilingandan keyin token localStorage'da
+// saqlanadi va har bir so'rovda Authorization headerda yuboriladi.
+// Bu cross-origin (turli domen) muammolarini hal qiladi.
 
 export const API_BASE: string =
   (import.meta as any).env?.VITE_API_BASE_URL || 'https://taxi.ardentsoft.uz/api';
+
+const TOKEN_KEY = 'auth_token';
 
 export class ApiError extends Error {
   status: number;
@@ -19,9 +21,16 @@ export class ApiError extends Error {
   }
 }
 
-function getCookie(name: string): string | null {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
+function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
 }
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -31,16 +40,16 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     ...(options.headers as Record<string, string> | undefined),
   };
 
-  if (method !== 'GET' && method !== 'HEAD') {
-    const csrfToken = getCookie('csrftoken');
-    if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+  // Token mavjud bo'lsa Authorization headerga qo'shamiz
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Token ${token}`;
   }
 
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     method,
     headers,
-    credentials: 'include',
   });
 
   if (res.status === 401 || res.status === 403) {
@@ -63,17 +72,25 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 }
 
 // --- Auth ---
-export async function fetchCsrf(): Promise<void> {
-  await apiFetch('/auth/csrf/');
-}
-
 export async function login(username: string, password: string): Promise<{ username: string; is_staff: boolean }> {
-  await fetchCsrf();
-  return apiFetch('/auth/login/', { method: 'POST', body: JSON.stringify({ username, password }) });
+  const data = await apiFetch<{ username: string; is_staff: boolean; token: string }>('/auth/login/', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+  // Backend'dan kelgan tokenni saqlaymiz
+  if (data.token) {
+    setToken(data.token);
+  }
+  return { username: data.username, is_staff: data.is_staff };
 }
 
 export async function logout(): Promise<void> {
-  await apiFetch('/auth/logout/', { method: 'POST' });
+  try {
+    await apiFetch('/auth/logout/', { method: 'POST' });
+  } catch {
+    /* xatolik bo'lsa ham tokenni tozalaymiz */
+  }
+  clearToken();
 }
 
 export async function fetchMe(): Promise<{ username: string; is_staff: boolean }> {
