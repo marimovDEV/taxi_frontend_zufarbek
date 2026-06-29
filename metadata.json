@@ -1,0 +1,6 @@
+{
+  "name": "Xorazm Taxi",
+  "description": "Real-time fleet management, passenger orders, user moderation, and broadcast messaging hub.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
