@@ -22,7 +22,8 @@ function initialsOf(name: string): string {
 function formatDate(iso?: string): string {
   if (!iso) return '';
   try {
-    return new Date(iso).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' });
+    const safeIso = iso.replace(' ', 'T');
+    return new Date(safeIso).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' });
   } catch {
     return iso;
   }
@@ -31,7 +32,8 @@ function formatDate(iso?: string): string {
 function formatDateTime(iso?: string): string {
   if (!iso) return '';
   try {
-    const d = new Date(iso);
+    const safeIso = iso.replace(' ', 'T');
+    const d = new Date(safeIso);
     return d.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' }) + ', ' +
       d.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
   } catch {
