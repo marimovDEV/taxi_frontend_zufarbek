@@ -11,6 +11,7 @@ import { HIGH_TRAFFIC_ROUTES, SYSTEM_HEALTH_ITEMS } from '../data';
 interface DashboardViewProps {
   stats: SystemStats;
   drivers: Driver[];
+  trendData: any[];
   onExportClick: () => void;
   onViewAllDriversClick: () => void;
 }
@@ -18,30 +19,19 @@ interface DashboardViewProps {
 export default function DashboardView({
   stats,
   drivers,
+  trendData,
   onExportClick,
   onViewAllDriversClick,
 }: DashboardViewProps) {
   // SVG Chart interactive state
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  // Mock trend data for the 15-day performance trends chart
-  const trendData = [
-    { day: '01 May', trips: 110, orders: 130 },
-    { day: '02 May', trips: 130, orders: 145 },
-    { day: '03 May', trips: 120, orders: 138 },
-    { day: '04 May', trips: 155, orders: 175 },
-    { day: '05 May', trips: 142, orders: 160 },
-    { day: '06 May', trips: 178, orders: 195 },
-    { day: '07 May', trips: 162, orders: 180 },
-    { day: '08 May', trips: 195, orders: 220 },
-    { day: '09 May', trips: 184, orders: 210 },
-    { day: '10 May', trips: 220, orders: 250 },
-    { day: '11 May', trips: 205, orders: 235 },
-    { day: '12 May', trips: 245, orders: 275 },
-    { day: '13 May', trips: 228, orders: 260 },
-    { day: '14 May', trips: 265, orders: 295 },
-    { day: '15 May', trips: 252, orders: 285 },
+  // Fallback trend data if API has less than 2 data points
+  const fallbackTrendData = [
+    { day: '01 May', trips: 50, orders: 50 },
+    { day: '02 May', trips: 50, orders: 50 },
   ];
+  const safeTrendData = trendData && trendData.length >= 2 ? trendData : fallbackTrendData;
 
   // Helper to format currency
   const formatCurrency = (val: number) => {
@@ -222,17 +212,17 @@ export default function DashboardView({
                   strokeOpacity="0.3"
                   strokeWidth="2"
                   strokeDasharray="4"
-                  x1={(hoveredIndex * (800 / (trendData.length - 1)))}
+                  x1={(hoveredIndex * (800 / (safeTrendData.length - 1)))}
                   y1="0"
-                  x2={(hoveredIndex * (800 / (trendData.length - 1)))}
+                  x2={(hoveredIndex * (800 / (safeTrendData.length - 1)))}
                   y2="220"
                 />
               )}
 
               {/* Primary Path (Trips) */}
               <path
-                d={trendData.reduce((acc, curr, i) => {
-                  const x = i * (800 / (trendData.length - 1));
+                d={safeTrendData.reduce((acc, curr, i) => {
+                  const x = i * (800 / (safeTrendData.length - 1));
                   // map value to Y (min 50 max 300, canvas range 20 to 220)
                   const y = 220 - ((curr.trips - 50) / 250) * 180;
                   return acc + `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
@@ -245,8 +235,8 @@ export default function DashboardView({
               />
 
               <path
-                d={trendData.reduce((acc, curr, i) => {
-                  const x = i * (800 / (trendData.length - 1));
+                d={safeTrendData.reduce((acc, curr, i) => {
+                  const x = i * (800 / (safeTrendData.length - 1));
                   const y = 220 - ((curr.trips - 50) / 250) * 180;
                   return acc + `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
                 }, '') + ` L 800 220 L 0 220 Z`}
@@ -255,8 +245,8 @@ export default function DashboardView({
 
               {/* Secondary Path (Orders) */}
               <path
-                d={trendData.reduce((acc, curr, i) => {
-                  const x = i * (800 / (trendData.length - 1));
+                d={safeTrendData.reduce((acc, curr, i) => {
+                  const x = i * (800 / (safeTrendData.length - 1));
                   const y = 220 - ((curr.orders - 50) / 250) * 180;
                   return acc + `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
                 }, '')}
@@ -268,8 +258,8 @@ export default function DashboardView({
               />
 
               {/* Interactive Hover Hotzones */}
-              {trendData.map((d, i) => {
-                const x = i * (800 / (trendData.length - 1));
+              {safeTrendData.map((d, i) => {
+                const x = i * (800 / (safeTrendData.length - 1));
                 const yTrips = 220 - ((d.trips - 50) / 250) * 180;
                 const yOrders = 220 - ((d.orders - 50) / 250) * 180;
                 return (
@@ -298,12 +288,12 @@ export default function DashboardView({
 
             {/* Bottom X-Axis labels */}
             <div className="absolute bottom-0 left-0 w-full flex justify-between px-1 text-[10px] text-on-surface-variant font-mono font-bold">
-              <span>01 May</span>
-              <span>04 May</span>
-              <span>07 May</span>
-              <span>10 May</span>
-              <span>13 May</span>
-              <span>15 May</span>
+              <span>{safeTrendData[0]?.day}</span>
+              <span>{safeTrendData[Math.floor(safeTrendData.length * 0.2)]?.day}</span>
+              <span>{safeTrendData[Math.floor(safeTrendData.length * 0.4)]?.day}</span>
+              <span>{safeTrendData[Math.floor(safeTrendData.length * 0.6)]?.day}</span>
+              <span>{safeTrendData[Math.floor(safeTrendData.length * 0.8)]?.day}</span>
+              <span>{safeTrendData[safeTrendData.length - 1]?.day}</span>
             </div>
 
             {/* Float Tooltip Overlay */}
@@ -312,14 +302,14 @@ export default function DashboardView({
                 className="absolute z-10 bg-inverse-surface text-inverse-on-surface text-xs rounded-xl p-3 shadow-xl border border-outline border-opacity-20 flex flex-col gap-1 w-36 animate-in fade-in zoom-in duration-100"
                 style={{
                   left: `${Math.min(
-                    Math.max(hoveredIndex * (100 / (trendData.length - 1)) - 8, 1),
+                    Math.max(hoveredIndex * (100 / (safeTrendData.length - 1)) - 8, 1),
                     82
                   )}%`,
                   top: '10px',
                 }}
               >
                 <p className="font-bold text-[10px] text-outline-variant tracking-wider uppercase">
-                  {trendData[hoveredIndex].day}
+                  {safeTrendData[hoveredIndex].day}
                 </p>
                 <div className="flex justify-between items-center mt-1 border-t border-outline-variant/10 pt-1">
                   <span className="flex items-center gap-1.5 font-medium">
@@ -327,7 +317,7 @@ export default function DashboardView({
                     Qatnovlar:
                   </span>
                   <span className="font-bold text-sm text-primary-fixed">
-                    {trendData[hoveredIndex].trips}
+                    {safeTrendData[hoveredIndex].trips}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -336,7 +326,7 @@ export default function DashboardView({
                     Buyurtmalar:
                   </span>
                   <span className="font-bold text-sm text-secondary-fixed">
-                    {trendData[hoveredIndex].orders}
+                    {safeTrendData[hoveredIndex].orders}
                   </span>
                 </div>
               </div>

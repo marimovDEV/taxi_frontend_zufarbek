@@ -45,6 +45,7 @@ export default function App() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [blacklist, setBlacklist] = useState<BlacklistUser[]>([]);
+  const [dailyStats, setDailyStats] = useState<any[]>([]);
   const [stats, setStats] = useState<SystemStats>({
     liveTripsCount: 0,
     pendingOrdersCount: 0,
@@ -52,7 +53,6 @@ export default function App() {
     volumeToday: 0,
     totalUsersCount: 0,
     activeDriversCount: 0,
-    systemBalance: 0,
     bannedUsersCount: 0,
   });
   // Tarif/komissiya/SMS kabi maydonlar backendda yo'q — faqat lokal UI sozlamasi
@@ -89,7 +89,7 @@ export default function App() {
   const loadAllData = useCallback(async () => {
     setIsDataLoading(true);
     try {
-      const [usersRaw, tripsRaw, ordersRaw, broadcastsRaw, blacklistRaw, statsRaw, botSettingsRaw] = await Promise.all([
+      const [usersRaw, tripsRaw, ordersRaw, broadcastsRaw, blacklistRaw, statsRaw, botSettingsRaw, dailyStatsRaw] = await Promise.all([
         api.fetchUsers(),
         api.fetchTrips(),
         api.fetchOrders(),
@@ -97,6 +97,7 @@ export default function App() {
         api.fetchBlacklist(),
         api.fetchStats(),
         api.fetchBotSettings(),
+        api.fetchDailyStats(),
       ]);
 
       const usersById = new Map<string, any>(usersRaw.map((u: any) => [String(u.telegram_id), u]));
@@ -116,6 +117,16 @@ export default function App() {
         pendingOrdersCount: ordersRaw.filter((o: any) => o.status === 'pending').length,
         bannedUsersCount: usersRaw.filter((u: any) => u.status === 'banned').length,
       }));
+
+      const formattedTrendData = dailyStatsRaw.map((d: any) => {
+        const dateObj = new Date(d.date);
+        return {
+          day: dateObj.toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short' }),
+          trips: d.trips || 0,
+          orders: d.orders || 0,
+        };
+      }).reverse();
+      setDailyStats(formattedTrendData);
 
       const settingsByKey: Record<string, string> = {};
       botSettingsRaw.forEach((s: any) => { settingsByKey[s.key] = s.value; });
@@ -483,6 +494,7 @@ export default function App() {
             <DashboardView
               stats={stats}
               drivers={drivers}
+              trendData={dailyStats}
               onExportClick={() => {
                 triggerToast('Ma\'lumotlar paketi tayyorlandi. Yuklab olish boshlandi.', 'success');
                 pushLog('Tizim jadvallari CSV formatida eksport qilindi.');

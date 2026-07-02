@@ -44,7 +44,7 @@ export default function UsersView({
       photoUrl: d.photoUrl,
       initials: d.name.split(' ').map((n) => n[0]).join(''),
       role: 'Driver',
-      phone: '+998 90 248 11 22', // mock
+      phone: d.phone || 'Telefon yo\'q',
       telegram: `@${d.name.toLowerCase().replace(' ', '_')}`,
       telegramId: '445212398',
       balance: d.earnings, // Earnings acts as balance or similar

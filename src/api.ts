@@ -132,6 +132,10 @@ export async function fetchStats(): Promise<any> {
   return apiFetch('/stats/');
 }
 
+export async function fetchDailyStats(): Promise<any[]> {
+  return apiFetch('/stats/daily/');
+}
+
 export async function fetchTopRoutes(): Promise<any[]> {
   return apiFetch('/stats/routes/');
 }

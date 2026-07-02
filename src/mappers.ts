@@ -45,6 +45,7 @@ export function mapUserToDriver(u: any): Driver {
   return {
     id: String(u.telegram_id),
     name: u.fullname || `Haydovchi #${u.telegram_id}`,
+    phone: u.phone || '',
     photoUrl: '',
     vehicleModel: u.car_type || "Noma'lum",
     licensePlate: u.car_number || '-',

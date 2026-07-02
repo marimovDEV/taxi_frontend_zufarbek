@@ -6,6 +6,7 @@
 export interface Driver {
   id: string;
   name: string;
+  phone: string;
   photoUrl: string;
   vehicleModel: string;
   licensePlate: string;
