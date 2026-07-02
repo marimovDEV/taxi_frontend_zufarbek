@@ -152,7 +152,7 @@ export default function DashboardView({
           <div className="mt-4">
             <h3 className="text-on-surface-variant text-xs font-semibold uppercase tracking-wider">Tushum (Netto)</h3>
             <p className="font-display-lg text-3xl font-extrabold text-on-surface mt-1">
-              {formatCurrency(stats.systemBalance)}
+              {formatCurrency(stats.systemBalance || 0)}
             </p>
           </div>
           <div className="flex items-center gap-2 mt-4">
