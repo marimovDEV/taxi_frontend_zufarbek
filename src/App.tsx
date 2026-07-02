@@ -25,6 +25,8 @@ import {
   mapApiOrder,
   mapApiBroadcast,
   mapApiBlacklist,
+  formatUzShortDate,
+  formatUzLongDate,
 } from './mappers';
 import { X, Bell, Terminal, CheckCircle2 } from 'lucide-react';
 
@@ -122,7 +124,7 @@ export default function App() {
       const formattedTrendData = dailyStatsRaw.map((d: any) => {
         const dateObj = new Date(d.date);
         return {
-          day: dateObj.toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short' }),
+          day: formatUzShortDate(dateObj),
           trips: d.trips || 0,
           orders: d.orders || 0,
         };
@@ -299,7 +301,7 @@ export default function App() {
         telegramUsername: isPassenger ? (target as Passenger).telegramUsername : '',
         phone: isPassenger ? (target as Passenger).phone : '',
         reason: created.reason || '',
-        date: new Date().toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' }),
+        date: formatUzLongDate(new Date()),
         time: new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }),
         type: 'Doimiy',
         originalRole: isPassenger ? 'Passenger' : 'Driver',
@@ -351,7 +353,7 @@ export default function App() {
         reason: newUser.reason,
       });
 
-      const dateStr = new Date().toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' });
+      const dateStr = formatUzLongDate(new Date());
       const timeStr = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
       const completeUser: BlacklistUser = { ...newUser, id: String(created.id), date: dateStr, time: timeStr };
 

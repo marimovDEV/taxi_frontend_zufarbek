@@ -19,11 +19,25 @@ function initialsOf(name: string): string {
     .join('') || '??';
 }
 
+const UZ_MONTHS_SHORT = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+
+export function formatUzShortDate(d: Date): string {
+  if (isNaN(d.getTime())) return '';
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = UZ_MONTHS_SHORT[d.getMonth()];
+  return `${day} ${month}`;
+}
+
+export function formatUzLongDate(d: Date): string {
+  if (isNaN(d.getTime())) return '';
+  return `${d.getDate()} ${UZ_MONTHS_SHORT[d.getMonth()]}, ${d.getFullYear()}`;
+}
+
 function formatDate(iso?: string): string {
   if (!iso) return '';
   try {
     const safeIso = iso.replace(' ', 'T');
-    return new Date(safeIso).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' });
+    return formatUzLongDate(new Date(safeIso));
   } catch {
     return iso;
   }
@@ -34,7 +48,7 @@ function formatDateTime(iso?: string): string {
   try {
     const safeIso = iso.replace(' ', 'T');
     const d = new Date(safeIso);
-    return d.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' }) + ', ' +
+    return formatUzShortDate(d) + ', ' +
       d.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
   } catch {
     return iso;
@@ -96,7 +110,7 @@ export function mapApiTrip(t: any, usersById: Map<string, any>): Trip {
     routeEnd: t.to_district,
     emptySeats: t.seats_available,
     price: t.price,
-    departureDay: departure ? departure.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' }) : '',
+    departureDay: departure ? formatUzShortDate(departure) : '',
     departureTime: departure ? departure.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }) : '',
     status: statusMap[t.status] || 'ACTIVE',
   };
@@ -160,7 +174,7 @@ export function mapApiBlacklist(b: any): BlacklistUser {
     telegramUsername: '',
     phone: b.phone || '',
     reason: b.reason || '',
-    date: created.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' }),
+    date: formatUzLongDate(created),
     time: created.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }),
     type: 'Doimiy',
     originalRole: 'Passenger',
