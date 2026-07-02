@@ -116,6 +116,7 @@ export default function App() {
         liveTripsCount: statsRaw.active_trips ?? prev.liveTripsCount,
         pendingOrdersCount: ordersRaw.filter((o: any) => o.status === 'pending').length,
         bannedUsersCount: usersRaw.filter((u: any) => u.status === 'banned').length,
+        systemBalance: statsRaw.total_revenue ?? prev.systemBalance,
       }));
 
       const formattedTrendData = dailyStatsRaw.map((d: any) => {
